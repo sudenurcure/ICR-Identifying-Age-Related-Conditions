@@ -1,7 +1,12 @@
+# %%
 # ----------------------------------------- Install -----------------------------------------
 import pandas as pd
 import numpy as np
 from sklearn.impute import KNNImputer
+from sklearn.preprocessing import LabelEncoder
+import matplotlib.pyplot as plt
+import seaborn as sns
+
 
 # ----------------------------------------- Check Documents -----------------------------------------
 
@@ -46,5 +51,26 @@ imputed_df = pd.DataFrame(imputed_numeric_data, columns=imputed_columns)
 imputed_df = pd.concat([df_train_strings, imputed_df, categorical_data], axis=1)
 
 print("Empty values: \n", imputed_df.isnull().sum())
+print("Table: \n", imputed_df.head(10))
 
-# ----------------------------------------- Visualizations -----------------------------------------
+
+# ----------------------------------------- Label Encode Categorical Data -----------------------------------------
+LE = LabelEncoder()
+imputed_df["EJ"] = LE.fit_transform(imputed_df["EJ"])
+
+# ----------------------------------------- Corrolation and Visualizations -----------------------------------------
+
+vis_df = imputed_df.drop(
+    imputed_df.filter(regex="missing").columns, axis=1, inplace=False
+)
+
+print("Corrolation Heatmap: \n")
+
+corrolation = vis_df.corr(method="spearman", min_periods=0)
+dataplot_hm = sns.heatmap(vis_df.corr(method="spearman", min_periods=0))
+plt.show()
+
+path = "/home/sudenurcure/ICR-Identifying-Age-Related-Conditions/imputed_df.csv"
+imputed_df.to_csv(path)
+
+# %%
