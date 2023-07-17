@@ -71,6 +71,7 @@ dataplot_hm = sns.heatmap(vis_df.corr(method="spearman", min_periods=0))
 plt.show()
 
 path = "/home/sudenurcure/ICR-Identifying-Age-Related-Conditions/imputed_df.csv"
-imputed_df.to_csv(path)
+transpose_df = imputed_df.transpose()
+transpose_df.to_csv(path)
 
 # %%
