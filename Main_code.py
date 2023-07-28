@@ -8,6 +8,21 @@ from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+# Machine Learning
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.tree import DecisionTreeClassifier
+
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import (
+    confusion_matrix,
+    accuracy_score,
+    f1_score,
+    precision_score,
+    recall_score,
+    classification_report,
+)
+
 
 # ----------------------------------------- Check Documents -----------------------------------------
 
@@ -84,7 +99,7 @@ def Box_plot(df):
     df.boxplot(by="Class", layout=(8, 7), figsize=(15, 15))
 
 
-Correlation_map(df_train)
+# Correlation_map(df_train)
 
 
 def PCA_dim_reduction(x):
@@ -141,7 +156,107 @@ def PCA_analysis(df):
     return 0
 
 
-PCA_analysis(df_train)
+# PCA_analysis(df_train)
+
+# ------------------Classes-----------------
 
 
+class ML_Model(object):
+    def __init__(self, model, y_predict, y_test):
+        self.model = model
+        self.y_predict = y_predict
+        self.y_test = y_test
+
+        # Find scores
+        self.accuracy = accuracy_score(y_predict, y_test) * 100
+        self.precision = precision_score(y_predict, y_test) * 100
+        self.recall = recall_score(y_predict, y_test) * 100
+        self.f1 = f1_score(y_predict, y_test) * 100
+
+    def ConfM(self):
+        cm = confusion_matrix(self.y_test, self.y_predict)
+
+        plt.rcParams["figure.figsize"] = (4, 4)
+        sns.heatmap(cm, annot=True, cmap="Greens")
+        plt.title("Confusion Matrix for " + self.model, fontweight=30, fontsize=20)
+        plt.show()
+
+    def score(self):  # print scores
+        print("Model Accuracy Details (%):\n")
+        print("Accuracy Score :", self.accuracy)  # Total true out of all
+        print("Precision Score:", self.precision)  # True positives from all positives
+        print(
+            "Recall Score:", self.recall
+        )  # True positives from real positive instances
+        print(
+            "f1 Score:", self.f1, "\n"
+        )  # Rates the model based on precision and recall. 0-1 and higher means better score.
+        self.ConfM()
+
+
+# ----------------------------- ML Prep--------------------------
+LE = LabelEncoder()
+ml_df = df_train.copy(deep=True)
+
+ml_df.drop(columns="Id", inplace=True)
+ml_df["EJ"] = LE.fit_transform(ml_df["EJ"])
+ml_df["Class"] = LE.fit_transform(ml_df["Class"])
+
+print("Ml DF: \n", ml_df.head())
+
+X = ml_df.drop(columns="Class")
+y = ml_df["Class"]
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, random_state=0, test_size=0.25
+)
+
+y_train = np.ravel(y_train)
+y_test = np.ravel(y_test)
+
+print("X_train: ", X_train.shape)
+print("y_train: ", y_train.shape)
+print("X_test: ", X_test.shape)
+print("y_test: ", y_test.shape)
+
+
+# --------------------- ML Algorithms--------------------------
+# Decision Tree
+DecisionTree = DecisionTreeClassifier()
+
+model = DecisionTree.fit(X_train, y_train)
+y_predict = model.predict(X_test)
+DecTree = ML_Model("Decision Tree", y_predict, y_test)
+
+# Random Forest
+RandomForest = RandomForestClassifier(random_state=0)
+
+model = RandomForest.fit(X_train, y_train)
+y_predict = model.predict(X_test)
+RandForr = ML_Model("Random Forest", y_predict, y_test)
+
+# Logistic Regression
+Logistic_Regression = LogisticRegression(max_iter=10000000)
+
+model = Logistic_Regression.fit(X_train, y_train)
+y_predict = model.predict(X_test)
+LogReg = ML_Model("Logistic Regression", y_predict, y_test)
+
+print(DecTree.model, "\n")
+DecTree.score()
+print(RandForr.model, "\n")
+RandForr.score()
+print(LogReg.model, "\n")
+LogReg.score()
+
+compare = pd.DataFrame(
+    {
+        "Model": [DecTree.model, RandForr.model, LogReg.model],
+        "Accuracy Scores": [DecTree.accuracy, RandForr.accuracy, LogReg.accuracy],
+    }
+)
+
+print(compare)
+
+# Logistic Regression looks like a good candidate
 # %%
